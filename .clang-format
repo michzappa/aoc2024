@@ -1,0 +1,8 @@
+IndentWidth: 2
+PointerAlignment: Left
+AllowShortBlocksOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AlignConsecutiveAssignments: Consecutive
