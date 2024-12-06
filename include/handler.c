@@ -4,15 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/data.h"
-#include "../include/dyn_array.h"
-
-// TODO Could the file reading be turned into a lib function? Maybe
-// as continuation-passing-style??? How would the error detection
-// and accurate returning of the error code be handled?
-
-// TODO de-duplicate error message literal format string?
-
 // Starting length of error message buffers, which will be reallocated
 // at error-creation time if more space is needed.
 #define ERROR_LENGTH 30

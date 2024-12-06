@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,7 +8,7 @@
 
 dyn_array* init_dyn_array(data_type_t type) {
   // Allocate the entire struct.
-  dyn_array* result = malloc(sizeof(dyn_array));
+  dyn_array* result = calloc(1, sizeof(dyn_array));
 
   // Assign properties.
   result->data_type = type;
@@ -15,9 +16,19 @@ dyn_array* init_dyn_array(data_type_t type) {
   result->allocated = DYN_ARRAY_INIT_SIZE;
 
   // Allocate appropriately sized data array for the data type.
-  result->data = malloc(result->allocated * size_of_data_type(type));
+  result->data = calloc(result->allocated, size_of_data_type(type));
 
   return result;
+}
+
+void set_data_array_element(void* data, const void* el, size_t index,
+                            data_type_t type) {
+  switch (type) {
+  case UINT64:
+    ((uint64_t*)data)[index] = (uint64_t)el;
+  case DYN_ARRAY:
+    ((dyn_array**)data)[index] = (dyn_array*)el;
+  }
 }
 
 dyn_array* copy_dyn_array(dyn_array* arr) {
@@ -28,21 +39,38 @@ dyn_array* copy_dyn_array(dyn_array* arr) {
   copy->occupied  = arr->occupied;
   copy->allocated = arr->allocated;
 
-  size_t data_size = arr->allocated * size_of_data_type(arr->data_type);
-  // Re-alloc the contents array.
-  copy->data = realloc(copy->data, data_size);
+  // Allocated the contents array of the needed size. Free what was initialized.
+  free(copy->data);
+  copy->data = calloc(arr->allocated, size_of_data_type(arr->data_type));
 
-  // Copy the data in.
-  memcpy(copy->data, arr->data, data_size);
+  // Copy the data in - raw access to the underlying array without
+  // needing the full push procedure.
+  void* (*copier)(const void* v) = copier_for_data_type(arr->data_type);
+  for (size_t i = 0; i < arr->allocated; i += 1) {
+    void* el = get_element_of_dyn_array(arr, i);
+    if (el != NULL) {
+      void* el_copy = copier(el);
+      set_data_array_element(copy->data, el_copy, i, arr->data_type);
+    }
+  }
 
   return copy;
 }
 
 void free_dyn_array(dyn_array* arr) {
+  void (*freer)(const void* v) = freer_for_data_type(arr->data_type);
+
+  for (size_t i = 0; i < arr->allocated; i += 1) {
+    void* el = get_element_of_dyn_array(arr, i);
+    if (el != NULL) {
+      freer(el);
+    }
+  }
+
   // Free the constituent data array, which was allocated.
   free(arr->data);
 
-  // Free the malloc'd struct itself.
+  // Free the allocated struct itself.
   free(arr);
 }
 
@@ -53,10 +81,11 @@ void* get_element_of_dyn_array(dyn_array* arr, size_t idx) {
     switch (arr->data_type) {
     case UINT64:
       return (void*)(((uint64_t*)arr->data)[idx]);
-    default:
-      printf("The C type system has been defeated.");
-      exit(-1);
+    case DYN_ARRAY:
+      return (void*)(((dyn_array**)arr->data)[idx]);
     }
+    printf("The C type system has been defeated.");
+    exit(-1);
   }
 }
 
@@ -71,11 +100,29 @@ void push_onto_dyn_array(dyn_array* arr, const void* el) {
     arr->allocated = new_allocation_size;
   }
 
-  switch (arr->data_type) {
-  case UINT64:
-    ((uint64_t*)arr->data)[arr->occupied] = (uint64_t)el;
-    arr->occupied += 1;
-    return;
+  void* (*copier)(const void* v) = copier_for_data_type(arr->data_type);
+  void* el_copy                  = copier(el);
+  set_data_array_element(arr->data, el_copy, arr->occupied, arr->data_type);
+
+  arr->occupied += 1;
+  return;
+}
+
+bool remove_element_of_dyn_array(dyn_array* arr, size_t idx) {
+  if (idx >= arr->occupied) {
+    return false;
+  } else {
+    size_t end = arr->occupied;
+    for (size_t i = idx; i < end; i += 1) {
+      switch (arr->data_type) {
+      case UINT64:
+        ((uint64_t*)arr->data)[i] = ((uint64_t*)arr->data)[i + 1];
+      case DYN_ARRAY:
+        ((dyn_array**)arr->data)[i] = ((dyn_array**)arr->data)[i + 1];
+      }
+    }
+    arr->occupied -= 1;
+    return true;
   }
 }
 
@@ -162,7 +209,7 @@ char* pp_dyn_array(dyn_array* arr) {
 }
 
 void print_dyn_array(dyn_array* arr) {
-  char* pp = pp_dyn_array(arr);
+  char* pp = pp_dyn_array((void*)arr);
   printf("arr: %s\n", pp);
   free(pp);
 }

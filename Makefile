@@ -1,6 +1,6 @@
-VALGRIND_FLAGS = -s --track-origins=yes --leak-check=full
+VALGRIND_FLAGS = -s --track-origins=yes --leak-check=full --show-leak-kinds=all
 CC=gcc
-CFLAGS = -Werror=all #-g
+CFLAGS = -Werror=all -g
 INCLUDED_OBJS = include/data.o include/dyn_array.o include/handler.o include/hash_table.o
 
 #### Compile shared code in 'include', dependencies of solution.
@@ -32,6 +32,12 @@ valgrind-run-%: solution-% day%/input.txt
 #### Scratch 'test' file. (which may not exist)
 test: $(INCLUDED_OBJS) test.c
 	$(CC) $(CFLAGS) -o $@ $^
+
+run-test: test
+	./test
+
+valgrind-test: test
+	valgrind $(VALGRIND_FLAGS) ./test
 
 #### Utilities.
 format:

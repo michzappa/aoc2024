@@ -10,7 +10,8 @@
 #include <stdlib.h>
 
 typedef enum {
-  UINT64 // raw uint64_t - NOT A POINTER/REFERENCE TO ONE!!!
+  UINT64,   // raw uint64_t - NOT A POINTER/REFERENCE TO ONE!!!
+  DYN_ARRAY // pointer to a dyn_array
 } data_type_t;
 
 // Return the memory size which underlies the given TYPE.
@@ -22,7 +23,12 @@ int (*comparator_for_data_type(data_type_t type))(const void*, const void*);
 // Return a pretty printing function for the given data TYPE.
 char* (*pp_for_data_type(data_type_t type))(const void*);
 
-uint64_t (*hasher_for_data_type(data_type_t type))(const void*,
-                                                   data_type_t type);
+uint64_t (*hasher_for_data_type(data_type_t type))(const void*);
+
+// Return a copier function for the given data TYPE.
+void* (*copier_for_data_type(data_type_t type))(const void* v);
+
+// Return a free function for the given data TYPE.
+void (*freer_for_data_type(data_type_t type))(const void* v);
 
 #endif

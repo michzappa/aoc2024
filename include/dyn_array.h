@@ -1,6 +1,7 @@
 #ifndef DYN_ARRAY_H
 #define DYN_ARRAY_H
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "./data.h"
@@ -26,9 +27,12 @@ void free_dyn_array(dyn_array* arr);
 // Return the element at the given IDX in ARR.
 void* get_element_of_dyn_array(dyn_array* arr, size_t idx);
 
-// Insert the value EL onto the end of the dynamic array ARR.
+// Insert a copy of the value EL onto the end of the dynamic array ARR.
 // NOTE: EL must be of the same data type as underlies ARR.
 void push_onto_dyn_array(dyn_array* arr, const void* el);
+
+// Remove the element at the given IDX from the given ARR.
+bool remove_element_of_dyn_array(dyn_array* arr, size_t idx);
 
 // Sort the contents of the given dynamic array ARR in place.
 void sort_dyn_array(dyn_array* arr);
