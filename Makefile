@@ -29,15 +29,15 @@ valgrind-practice-%: solution-% day%/practice_input.txt
 valgrind-run-%: solution-% day%/input.txt
 	valgrind $(VALGRIND_FLAGS) ./$^
 
-#### Scratch 'test' file. (which may not exist)
-test: $(INCLUDED_OBJS) test.c
+#### Tests.
+test-%: $(INCLUDED_OBJS) test/%.c
 	$(CC) $(CFLAGS) -o $@ $^
 
-run-test: test
-	./test
+run-test-%: test-%
+	./$^
 
-valgrind-test: test
-	valgrind $(VALGRIND_FLAGS) ./test
+valgrind-test-%: test-%
+	valgrind $(VALGRIND_FLAGS) ./$^
 
 #### Utilities.
 format:
