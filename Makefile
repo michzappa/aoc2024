@@ -3,19 +3,16 @@ CC=gcc
 CFLAGS = -Werror=all -g
 INCLUDED_OBJS = include/data.o include/dyn_array.o include/handler.o include/hash_table.o
 
-#### Compile shared code in 'include', dependencies of solution.
-include/%.o: include/%.c
+#### Compile code.
+%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-include/%.s: include/%.c
+%.s: %.c
 	$(CC) $(CFLAGS) -S -c -o $@ $<
 
 #### Create and Run the Solutions.
 solution-%: $(INCLUDED_OBJS) day%/solution.c
 	$(CC) $(CFLAGS) -o $@ $^
-
-solution-%.s: day%/solution.c
-	$(CC) $(CFLAGS) -S -o $@ $^
 
 practice-%: solution-% day%/practice_input.txt
 	./$^
@@ -44,5 +41,6 @@ format:
 	clang-format -i **/*.c **/*.h
 
 clean:
-	rm -f include/*.o
+	rm -f **/*.o
 	rm -f solution-*
+	rm -f **/*.s
